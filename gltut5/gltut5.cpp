@@ -34,14 +34,32 @@ genMVP(float width, float height) {
     return mvp;
 }
 
-struct MyBMPTexture {
+struct MyTexture {
     char *buffer;
     unsigned int w, h, sz;
     GLuint tex_id;
+    bool valid;
 
-    MyBMPTexture(const char *filename) : buffer(nullptr), w(0), h(0), sz(0), tex_id(0) {
+    MyTexture(void) : buffer(nullptr), w(0), h(0), sz(0), tex_id(0), valid(false) {
+        glGenTextures(1, &(this->tex_id));
+    };
+
+    void bind(void) {
+        glBindTexture(GL_TEXTURE_2D, this->tex_id);
+    };
+
+    virtual ~MyTexture(void) {
+        if(buffer != nullptr) {
+            delete buffer;
+        };
+    };
+};
+
+struct MyBMPTexture : MyTexture {
+    MyBMPTexture(const char *filename) : MyTexture() {
         char header_buffer[54];
         unsigned int data_pos;
+
         ifstream bmpfile(filename);
         bmpfile.read(header_buffer, sizeof(header_buffer));
         data_pos = *(int*)&(header_buffer[0x0a]);
@@ -65,7 +83,6 @@ struct MyBMPTexture {
         bmpfile.read(this->buffer, this->sz);
 
         /* Next allocate new texture for this, and bind it so we can set it up. */
-        glGenTextures(1, &(this->tex_id));
         this->bind();
 
         /* Assign the raster data to this texture id. */
@@ -79,10 +96,88 @@ struct MyBMPTexture {
 
         /* Generate MipMap */
         glGenerateMipmap(GL_TEXTURE_2D);
-    }
 
-    void bind(void) {
-        glBindTexture(GL_TEXTURE_2D, this->tex_id);
+        valid = true;
+    };
+};
+
+struct MyDDSTexture : MyTexture {
+    unsigned int linear_size;
+    unsigned int mipmap_count;
+    unsigned int fourCC;
+    unsigned int components;
+    unsigned int format;
+    unsigned int block_size;
+
+    MyDDSTexture(const char *filename) : MyTexture() {
+        unsigned char header[124];
+        char filecode[4];
+
+        ifstream ddsfile(filename);
+        ddsfile.read(&filecode[0], sizeof(filecode));
+        if(strncmp(filecode, "DDS ", 4) == 0) {
+            ddsfile.read((char*)&header[0], sizeof(header));
+            this->h = *(unsigned int*)&(header[8]);
+            this->w = *(unsigned int*)&(header[12]);
+            this->linear_size = *(unsigned int*)&(header[16]);
+            this->mipmap_count = *(unsigned int*)&(header[24]);
+            this->fourCC = *(unsigned int*)&(header[80]);
+
+            if(this->mipmap_count > 1) {
+                /* If we have mipmaps, the buffer will be 2x image size. */
+                this->sz = this->linear_size * 2;
+            } else {
+                /* Otherwise, buffer_sz = linear_size */
+                this->sz = this->linear_size;
+            };
+
+            this->buffer = new char[this->sz];
+            ddsfile.read(this->buffer, this->sz);
+
+            if(this->fourCC == FOURCC_DXT1) {
+                this->components = 3;
+            } else {
+                this->components = 4;
+            };
+
+            switch(this->fourCC) {
+                case FOURCC_DXT1:
+                    this->format = GL_COMPRESSED_RGBA_S3TC_DXT1_EXT;
+                    this->block_size = 8;
+                    break;
+                case FOURCC_DXT3:
+                    this->format = GL_COMPRESSED_RGBA_S3TC_DXT3_EXT;
+                    this->block_size = 16;
+                    break;
+                case FOURCC_DXT5:
+                    this->format = GL_COMPRESSED_RGBA_S3TC_DXT5_EXT;
+                    this->block_size = 16;
+                    break;
+            };
+
+            cout << "FourCC Code: " << (char)(this->fourCC & 0xff);
+            cout << (char)(this->fourCC >> 8 & 0xff);
+            cout << (char)(this->fourCC >> 16 & 0xff);
+            cout << (char)(this->fourCC >> 24 & 0xff) << endl;
+
+            this->bind();
+
+            /* Load mipmaps. */
+            unsigned int offset = 0;
+            unsigned l_width = this->w;
+            unsigned l_height = this->h;
+
+            cout << "MipMap Levels: " << this->mipmap_count << endl;
+            for(unsigned int mm_level = 0; mm_level < this->mipmap_count && (l_width || l_height); mm_level++) {
+                unsigned int size = ((l_width+3)/4)*((l_height+3)/4)*this->block_size;
+                glCompressedTexImage2D(GL_TEXTURE_2D, mm_level, this->format, l_width, l_height, 0,
+                                       size, this->buffer + (uintptr_t)offset);
+                offset += size;
+                l_width >>= 1;
+                l_height >>= 1;
+            };
+            this->valid = true;
+        };
     };
 };
 
