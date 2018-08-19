@@ -11,10 +11,10 @@ loadShaders.o: loadShaders.cpp
 texture.o: texture.cpp texture.h
 	clang++ -g2 -c texture.cpp
 
-bmp_textture.o: bmp_texture.cpp texture.h
+bmp_texture.o: bmp_texture.cpp texture.h
 	clang++ -g2 -c bmp_texture.cpp
 
-dds_textture.o: dds_texture.cpp texture.h fourcc_codes.h
+dds_texture.o: dds_texture.cpp texture.h fourcc_codes.h
 	clang++ -g2 -c dds_texture.cpp
 
 controls.o: controls.cpp controls.h
