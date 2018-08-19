@@ -273,7 +273,7 @@ main(int argc, char** argv) {
     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE); // Use "core" OpenGL, not legacy
 
     // Now, open a window
-    appwin = glfwCreateWindow(1152, 864, "Tutorial 1", NULL, NULL);
+    appwin = glfwCreateWindow(1152, 864, "Tutorial 5", NULL, NULL);
     if(appwin == NULL) {
         cerr << "Couldn't create OpenGL Window, exiting" << endl;
         glfwTerminate();
