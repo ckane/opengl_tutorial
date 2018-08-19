@@ -18,6 +18,7 @@ using namespace std;
 
 #include "cube_array.h"
 #include "texture.h"
+#include "controls.h"
 
 using namespace glm;
 
@@ -25,10 +26,7 @@ using namespace glm;
 GLuint LoadShaders(const char * vertex_file_path,const char * fragment_file_path);
 
 mat4
-genMVP(float width, float height) {
-    mat4 Projection = perspective(radians(45.f), (float)width / (float)height, 0.1f, 100.0f);
-    //mat4 Projection = glm::ortho(-10.0f, 10.0f, -10.0f, 10.0f, 0.0f, 100.0f); // In world coordinates
-    mat4 View = lookAt(vec3(4,3,-3), vec3(0,0,0), vec3(0,1,0));
+genMVP(mat4 Projection, mat4 View) {
     mat4 Model = mat4(0.1f);
     mat4 mvp = Projection * View * Model;
     return mvp;
@@ -133,6 +131,8 @@ main(int argc, char** argv) {
         return -1;
     }
 
+    Controls ctrl(appwin);
+
     // Set the newly created window to be the current GL context
     glfwMakeContextCurrent(appwin);
     glewExperimental = true;
@@ -163,14 +163,13 @@ main(int argc, char** argv) {
 
     // Main event loop
     do {
+        ctrl.updateControls();
         /* Beginning of frame work. */
         // Clear the screen every frame
         glClearColor(0.0f, 0.0f, 0.4f, 0.0f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-        /* Rendering work. */
-        /* Generate the MVP xform matrix for the current view. */
-        my_mvp = genMVP(1152.f, 864.f); // Generate MVP transformation
+        my_mvp = genMVP(ctrl.getProjection(), ctrl.getView()); // Generate MVP transformation
 
         /* Draw my "triangles" model. */
         tex1->bind();
