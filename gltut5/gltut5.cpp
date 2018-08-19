@@ -302,8 +302,9 @@ main(int argc, char** argv) {
     GLfloat dynamic_color_buffer[12*3*3];
 
     // Load the Bitmap into a texture
-    MyBMPTexture tex1("tex1.bmp");
-    cout << "Tex1: " << "Sz(" << tex1.sz << ")" << endl;
+    //MyTexture *tex1 = new MyBMPTexture("tex1.bmp");
+    MyTexture *tex1 = new MyDDSTexture("tex1.dds");
+    cout << "Tex1: " << "Sz(" << tex1->sz << ")" << endl;
 
     triangles.colorize(uv_buffer_data, sizeof(uv_buffer_data)/sizeof(uv_buffer_data[0]));
 
@@ -319,7 +320,7 @@ main(int argc, char** argv) {
         my_mvp = genMVP(1152.f, 864.f); // Generate MVP transformation
 
         /* Draw my "triangles" model. */
-        tex1.bind();
+        tex1->bind();
         triangles.place();
         triangles.render(my_mvp);
 

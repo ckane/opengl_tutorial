@@ -17,5 +17,8 @@ void main() {
     gl_Position = MVP * vec4(vp_modelspace, 1);
 
     // We pass the uv coordinate out
-    uv = vp_uv;
+    uv.x = vp_uv.x;
+
+    // Since we are using compressed textures, flip the Y-axis
+    uv.y = 1.0-vp_uv.y;
 }
