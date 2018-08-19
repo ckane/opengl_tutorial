@@ -17,6 +17,7 @@ using namespace std;
 #include <glm/gtc/matrix_transform.hpp>
 
 #include "cube_array.h"
+#include "fourcc_codes.h"
 
 using namespace glm;
 
