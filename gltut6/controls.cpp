@@ -8,7 +8,7 @@
 using namespace glm;
 
 Controls::Controls(GLFWwindow *mainwin) : position(0, 0, 5), h_angle(3.14f), v_angle(0.f),
-                           init_fov(45.f), speed(3.f), mspeed(0.005f), win(mainwin),
+                           init_fov(45.f), speed(3.f), mspeed(0.05f), win(mainwin),
                            last_time(0.f) {
 };
 
